@@ -3,4 +3,4 @@ uvicorn[standard]
 selenium
 webdriver-manager
 pandas
-playwright
+
