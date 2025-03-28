@@ -10,7 +10,7 @@ import tempfile
 
 def scrape_profiles(li_at, search_link, max_results):
     options = Options()
-    options.binary_location = "/opt/render/project/.cache/ms-playwright/chromium-*/chrome-linux/chrome"
+    options.binary_location = "/opt/render/project/.cache/ms-playwright/chromium-1124/chrome-linux/chrome"
     options.add_argument("--headless")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
