@@ -3,21 +3,23 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-import tempfile  # For creating a temporary user data directory
+import tempfile
 
 def scrape_profiles(li_at, search_link, max_results):
-    options = webdriver.ChromeOptions()
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+    options = Options()
+    options.binary_location = "/opt/render/project/.cache/ms-playwright/chromium-*/chrome-linux/chrome"
     options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
 
     temp_user_data_dir = tempfile.mkdtemp()
     options.add_argument(f"--user-data-dir={temp_user_data_dir}")
 
-    driver = webdriver.Chrome(service=webdriver.chrome.service.Service(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     driver.set_page_load_timeout(180)
     driver.implicitly_wait(10)
@@ -27,16 +29,9 @@ def scrape_profiles(li_at, search_link, max_results):
     try:
         driver.get("https://www.linkedin.com")
         time.sleep(5)
-
-        driver.add_cookie({
-            "name": "li_at",
-            "value": li_at,
-            "domain": ".linkedin.com"
-        })
-
+        driver.add_cookie({"name": "li_at", "value": li_at, "domain": ".linkedin.com"})
         driver.refresh()
         time.sleep(10)
-
         driver.get(search_link)
         time.sleep(5)
 
@@ -50,7 +45,6 @@ def scrape_profiles(li_at, search_link, max_results):
             list_items = driver.find_elements(By.CSS_SELECTOR, '.search-results-container .list-style-none li')
 
             if not list_items:
-                print("No profiles found on this page.")
                 break
 
             for profile in list_items:
@@ -86,14 +80,11 @@ def scrape_profiles(li_at, search_link, max_results):
 
             try:
                 next_button = driver.find_element(By.XPATH, '//button[@aria-label="Suivant"]')
-                if next_button.is_enabled():
-                    next_button.click()
-                    time.sleep(5)
-                else:
-                    print("No more pages.")
-                    break
-            except Exception as e:
-                print(f"Error navigating to next page: {e}")
+                driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
+                time.sleep(1)
+                next_button.click()
+                time.sleep(5)
+            except:
                 break
 
     finally:
